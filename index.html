@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMARTS CALCULATOR</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    table {
+      width: 80%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    th {
+      background-color: #28a745;
+      color: white;
+    }
+    input {
+      width: 80px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .file-upload {
+      margin: 20px;
+    }
+    img {
+      max-width: 100px;
+      max-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>SMARTS CALCULATOR</h1>
+  <h2>MRM INSTITUTE OF MANAGEMENT</h2>
+  <h3>Created by Mohammed Reyazuddin</h3>
+
+  <!-- File Upload Section -->
+  <div class="file-upload">
+    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv, .txt, .doc, .docx, .jpg, .jpeg, .png, .gif">
+    <button onclick="uploadFile()">Upload File</button>
+    <button onclick="downloadSampleFile()">Download Sample File</button>
+  </div>
+
+  <!-- Table -->
+  <table id="calculatorTable">
+    <thead>
+      <tr>
+        <th>T1</th>
+        <th>T2</th>
+        <th>PA</th>
+        <th>PB</th>
+        <th>Assignment</th>
+        <th>Average</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added dynamically -->
+    </tbody>
+  </table>
+
+  <!-- Buttons -->
+  <button onclick="addRow()">Add Line</button>
+  <button onclick="printTable()">Print Preview</button>
+  <button onclick="exportToExcel()">Export to Excel</button>
+  <button onclick="exportToWord()">Export to Word</button>
+
+  <script>
+    // Function to add a new row
+    function addRow() {
+      const tableBody = document.querySelector("#calculatorTable tbody");
+      const newRow = document.createElement("tr");
+
+      newRow.innerHTML = `
+        <td><input type="number" class="t1" oninput="calculateRow(this)"></td>
+        <td><input type="number" class="t2" oninput="calculateRow(this)"></td>
+        <td><input type="number" class="pa" oninput="calculateRow(this)"></td>
+        <td><input type="number" class="pb" oninput="calculateRow(this)"></td>
+        <td class="assignment">0.00</td>
+        <td class="average">0.00</td>
+        <td><input type="number" class="total" oninput="calculateRow(this)"></td>
+      `;
+
+      tableBody.appendChild(newRow);
+    }
+
+    // Function to calculate a single row
+    function calculateRow(input) {
+      const row = input.closest("tr");
+      const t1 = parseFloat(row.querySelector(".t1").value) || 0;
+      const t2 = parseFloat(row.querySelector(".t2").value) || 0;
+      const pa = parseFloat(row.querySelector(".pa").value) || 0;
+      const pb = parseFloat(row.querySelector(".pb").value) || 0;
+      const total = parseFloat(row.querySelector(".total").value) || 0;
+
+      const average = (t1 + t2 + pa + pb) / 4; // Include PA and PB in the average calculation
+      const assignment = average - total;
+
+      row.querySelector(".average").textContent = average.toFixed(2);
+      row.querySelector(".assignment").textContent = assignment.toFixed(2);
+    }
+
+    // Function to print the table
+    function printTable() {
+      window.print();
+    }
+
+    // Function to export the table to Excel
+    function exportToExcel() {
+      const table = document.getElementById("calculatorTable");
+      const rows = table.querySelectorAll("tbody tr");
+      let csvContent = "data:text/csv;charset=utf-8,";
+
+      // Add headers
+      const headers = [];
+      table.querySelectorAll("thead th").forEach(header => {
+        headers.push(header.textContent);
+      });
+      csvContent += headers.join(",") + "\n";
+
+      // Add rows
+      rows.forEach(row => {
+        const rowData = [];
+        row.querySelectorAll("td").forEach(cell => {
+          if (cell.querySelector("input")) {
+            // For input fields (T1, T2, PA, PB, Total)
+            rowData.push(cell.querySelector("input").value || "0");
+          } else {
+            // For calculated fields (Assignment, Average)
+            rowData.push(cell.textContent || "0");
+          }
+        });
+        csvContent += rowData.join(",") + "\n";
+      });
+
+      // Download as CSV
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "SMARTS_CALCULATOR.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Function to export the table to Word
+    function exportToWord() {
+      const table = document.getElementById("calculatorTable");
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+          <head><meta charset="UTF-8"></head>
+          <body>${table.outerHTML}</body>
+        </html>
+      `;
+      const blob = new Blob([html], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "SMARTS_CALCULATOR.doc";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Function to handle file upload
+    function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a file to upload.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = e.target.result;
+        const fileType = file.name.split(".").pop().toLowerCase();
+
+        switch (fileType) {
+          case "txt":
+            parseTextFile(data);
+            break;
+          case "csv":
+            parseCSVFile(data);
+            break;
+          case "xls":
+          case "xlsx":
+            parseExcelFile(data);
+            break;
+          case "doc":
+          case "docx":
+            parseWordFile(data);
+            break;
+          case "jpg":
+          case "jpeg":
+          case "png":
+          case "gif":
+            displayImageFile(file);
+            break;
+          default:
+            alert("Unsupported file format.");
+        }
+      };
+
+      if (file.type.includes("image")) {
+        reader.readAsDataURL(file); // For image files
+      } else {
+        reader.readAsBinaryString(file); // For text-based files
+      }
+    }
+
+    // Function to parse text files
+    function parseTextFile(data) {
+      const tableBody = document.querySelector("#calculatorTable tbody");
+      tableBody.innerHTML = ""; // Clear existing rows
+
+      const rows = data.split("\n");
+      rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
+        const columns = row.split(",");
+        if (columns.length >= 5) { // Ensure there are at least 5 columns (T1, T2, PA, PB, Total)
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+            <td><input type="number" class="t1" value="${columns[0]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="t2" value="${columns[1]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="pa" value="${columns[2]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="pb" value="${columns[3]}" oninput="calculateRow(this)"></td>
+            <td class="assignment">0.00</td>
+            <td class="average">0.00</td>
+            <td><input type="number" class="total" value="${columns[4]}" oninput="calculateRow(this)"></td>
+          `;
+          tableBody.appendChild(newRow);
+          calculateRow(newRow.querySelector(".t1")); // Auto-calculate the row
+        }
+      });
+    }
+
+    // Function to parse CSV files
+    function parseCSVFile(data) {
+      parseTextFile(data); // CSV files are processed the same way as text files
+    }
+
+    // Function to parse Excel files
+    function parseExcelFile(data) {
+      // Use SheetJS library to parse Excel files
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      const tableBody = document.querySelector("#calculatorTable tbody");
+      tableBody.innerHTML = ""; // Clear existing rows
+
+      jsonData.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
+        if (row.length >= 5) { // Ensure there are at least 5 columns (T1, T2, PA, PB, Total)
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+            <td><input type="number" class="t1" value="${row[0]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="t2" value="${row[1]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="pa" value="${row[2]}" oninput="calculateRow(this)"></td>
+            <td><input type="number" class="pb" value="${row[3]}" oninput="calculateRow(this)"></td>
+            <td class="assignment">0.00</td>
+            <td class="average">0.00</td>
+            <td><input type="number" class="total" value="${row[4]}" oninput="calculateRow(this)"></td>
+          `;
+          tableBody.appendChild(newRow);
+          calculateRow(newRow.querySelector(".t1")); // Auto-calculate the row
+        }
+      });
+    }
+
+    // Function to parse Word files
+    function parseWordFile(data) {
+      alert("Word file parsing is not supported in this example. Please use Excel, CSV, or text files.");
+    }
+
+    // Function to display image files
+    function displayImageFile(file) {
+      const tableBody = document.querySelector("#calculatorTable tbody");
+      tableBody.innerHTML = ""; // Clear existing rows
+
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td colspan="7"><img src="${URL.createObjectURL(file)}" alt="Uploaded Image"></td>
+      `;
+      tableBody.appendChild(newRow);
+    }
+
+    // Function to download a sample CSV file
+    function downloadSampleFile() {
+      const sampleData = `T1,T2,PA,PB,Total\n10,20,5,5,5\n30,40,10,10,10\n50,60,15,15,15`;
+      const blob = new Blob([sampleData], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sample_file.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Add the first row on page load
+    addRow();
+  </script>
+  <!-- Include SheetJS library for Excel file parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+</body>
+</html>
